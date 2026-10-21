@@ -10,14 +10,25 @@ function handlePreFlightRequest(): Response {
 
 async function handler(_req: Request): Promise<Response> {
   if (_req.method == "OPTIONS") {
-    handlePreFlightRequest();
+    return handlePreFlightRequest();
+  }
+
+  const guess = new URL(_req.url).searchParams.get("word")?.trim();
+  if (!guess) {
+    return new Response("Missing 'word' query parameter", {
+      status: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "content-type",
+      },
+    });
   }
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
 
   const similarityRequestBody = JSON.stringify({
-    word1: "centrale",
+    word1: guess,
     word2: "supelec",
   });
 
@@ -29,7 +40,7 @@ async function handler(_req: Request): Promise<Response> {
   };
 
   try {
-    const response = await fetch("https://word2vec-ten.vercel.app", requestOptions);
+    const response = await fetch("https://word2vec-ten.vercel.app/similarity", requestOptions);
 
     if (!response.ok) {
       console.error(`Error: ${response.statusText}`);
